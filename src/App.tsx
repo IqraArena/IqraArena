@@ -1,36 +1,82 @@
-import { useState } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { useState, useEffect } from 'react';
+import { useActiveAccount, useAutoConnect } from 'thirdweb/react';
+import { client } from './lib/thirdwebClient';
+import { web3Service } from './lib/web3';
 import { Home } from './components/Home';
-import { Auth } from './components/Auth';
+import WalletConnect from './components/WalletConnect';
 import { Library } from './components/Library';
-import { Reader } from './components/Reader';
-import { Dashboard } from './components/Dashboard';
+import BlockchainReader from './components/BlockchainReader';
+import Leaderboard from './components/Leaderboard';
+import { WalletDashboard } from './components/WalletDashboard';
 import { useDarkMode } from './hooks/useDarkMode';
 
-type View = 'home' | 'auth' | 'library' | 'reader' | 'dashboard';
+type View = 'home' | 'wallet' | 'library' | 'reader' | 'leaderboard' | 'dashboard';
 
 function AppContent() {
-  const { user, loading } = useAuth();
   const [view, setView] = useState<View>('home');
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
   const [darkMode, setDarkMode] = useDarkMode();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">جاري التحميل...</p>
-        </div>
-      </div>
-    );
+  const { isLoading: isAutoConnecting } = useAutoConnect({
+    client,
+    timeout: 10000,
+  });
+
+  const activeAccount = useActiveAccount();
+
+  const toggleDarkMode = () => setDarkMode(!darkMode);
+
+  useEffect(() => {
+    if (activeAccount) {
+      console.log('Active account detected:', activeAccount.address);
+      web3Service.account = activeAccount;
+
+      const address = activeAccount.address;
+      setWalletAddress(address);
+      localStorage.setItem('walletAddress', address);
+
+      const savedUsername = localStorage.getItem('username');
+      if (savedUsername) {
+        setUsername(savedUsername);
+        if (view === 'home' || view === 'wallet') {
+          setView('library');
+        }
+      } else if (view === 'home') {
+        setView('wallet');
+      }
+    } else {
+      console.log('No active account, checking localStorage');
+      const savedAddress = localStorage.getItem('walletAddress');
+      const savedUsername = localStorage.getItem('username');
+      if (savedAddress && savedUsername && !isAutoConnecting) {
+        console.log('Found saved credentials, restoring session');
+        setWalletAddress(savedAddress);
+        setUsername(savedUsername);
+        setView('library');
+      }
+    }
+  }, [activeAccount, isAutoConnecting]);
+
+  const handleGetStarted = () => {
+    setView('wallet');
+  };
+
+  const handleWalletConnected = (address: string, user: string) => {
+    setWalletAddress(address);
+    setUsername(user);
+    localStorage.setItem('walletAddress', address);
+    localStorage.setItem('username', user);
+    setView('library');
+  };
+
+  if (view === 'home') {
+    return <Home onGetStarted={handleGetStarted} darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />;
   }
 
-  if (!user) {
-    if (view === 'auth') {
-      return <Auth />;
-    }
-    return <Home onGetStarted={() => setView('auth')} />;
+  if (view === 'wallet') {
+    return <WalletConnect onConnected={handleWalletConnected} onBack={() => setView('home')} darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />;
   }
 
   const handleSelectBook = (bookId: string) => {
@@ -47,37 +93,37 @@ function AppContent() {
     setView('dashboard');
   };
 
+  const handleViewLeaderboard = () => {
+    setView('leaderboard');
+  };
+
   const handleBackToLibrary = () => {
     setView('library');
   };
 
-  const handleToggleDarkMode = () => {
-    setDarkMode(!darkMode);
+  const handleSignOut = () => {
+    setWalletAddress('');
+    setUsername('');
+    setView('wallet');
   };
 
   if (view === 'dashboard') {
-    return (
-      <Dashboard
-        onBack={handleBackToLibrary}
-        darkMode={darkMode}
-        onToggleDarkMode={handleToggleDarkMode}
-      />
-    );
+    return <WalletDashboard walletAddress={walletAddress} username={username} onBack={handleBackToLibrary} darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />;
+  }
+
+  if (view === 'leaderboard') {
+    return <Leaderboard onBack={handleBackToLibrary} currentAddress={walletAddress} darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />;
   }
 
   if (view === 'reader' && selectedBookId) {
-    return <Reader bookId={selectedBookId} onClose={handleCloseReader} />;
+    return <BlockchainReader bookId={selectedBookId} onClose={handleCloseReader} darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />;
   }
 
-  return <Library onSelectBook={handleSelectBook} onViewDashboard={handleViewDashboard} />;
+  return <Library onSelectBook={handleSelectBook} onViewDashboard={handleViewDashboard} onViewLeaderboard={handleViewLeaderboard} onSignOut={handleSignOut} darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />;
 }
 
 function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
+  return <AppContent />;
 }
 
 export default App;

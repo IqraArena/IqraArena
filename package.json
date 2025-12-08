@@ -1,5 +1,5 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "iqra-arena",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,10 +11,17 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json"
   },
   "dependencies": {
+    "@celo/contractkit": "^10.0.2",
     "@supabase/supabase-js": "^2.57.4",
+    "@wagmi/connectors": "^7.0.1",
+    "@wagmi/core": "^3.0.0",
+    "ethers": "^6.15.0",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "thirdweb": "^5.114.0",
+    "viem": "^2.40.2",
+    "wagmi": "^3.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

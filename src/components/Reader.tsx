@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase, Book, BookPage, Quiz, ReadingProgress } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { ChevronLeft, ChevronRight, X, Award } from 'lucide-react';
+import { saveReadingProgress, getBookProgress, hasCompletedQuiz, markQuizCompleted } from '../utils/cookies';
 
 type ReaderProps = {
   bookId: string;
@@ -47,9 +48,18 @@ export const Reader = ({ bookId, onClose }: ReaderProps) => {
       const pageIndex = pagesResult.data?.findIndex(
         (p) => p.page_number === progressResult.data.current_page
       );
-      if (pageIndex !== -1) setCurrentPageIndex(pageIndex);
+      if (pageIndex !== undefined && pageIndex !== -1) setCurrentPageIndex(pageIndex);
     } else {
-      await createProgress();
+      const cookieProgress = getBookProgress(bookId);
+      if (cookieProgress && pagesResult.data) {
+        const pageIndex = pagesResult.data.findIndex(
+          (p) => p.page_number === cookieProgress.currentPage
+        );
+        if (pageIndex !== -1) setCurrentPageIndex(pageIndex);
+      }
+      if (user) {
+        await createProgress();
+      }
     }
 
     setLoading(false);
@@ -87,14 +97,20 @@ export const Reader = ({ bookId, onClose }: ReaderProps) => {
         .maybeSingle();
 
       if (quiz) {
-        const { data: response } = await supabase
-          .from('quiz_responses')
-          .select('*')
-          .eq('user_id', user?.id)
-          .eq('quiz_id', quiz.id)
-          .maybeSingle();
+        const alreadyAnsweredInCookie = hasCompletedQuiz(bookId, quiz.id);
 
-        if (!response) {
+        let alreadyAnsweredInDB = false;
+        if (user) {
+          const { data: response } = await supabase
+            .from('quiz_responses')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('quiz_id', quiz.id)
+            .maybeSingle();
+          alreadyAnsweredInDB = !!response;
+        }
+
+        if (!alreadyAnsweredInCookie && !alreadyAnsweredInDB) {
           setCurrentQuiz(quiz);
           setShowQuiz(true);
         }
@@ -117,38 +133,92 @@ export const Reader = ({ bookId, onClose }: ReaderProps) => {
   };
 
   const updateProgress = async (pageIndex: number) => {
-    if (!user || !progress) return;
-
     const currentPage = pages[pageIndex].page_number;
     const isCompleted = pageIndex === pages.length - 1;
 
-    await supabase
-      .from('reading_progress')
-      .update({
-        current_page: currentPage,
-        pages_read: Math.max(progress.pages_read, pageIndex + 1),
-        completed: isCompleted,
-        last_read_at: new Date().toISOString(),
-      })
-      .eq('id', progress.id);
+    const cookieProgress = getBookProgress(bookId);
+    saveReadingProgress({
+      bookId,
+      currentPage,
+      pagesRead: Math.max(cookieProgress?.pagesRead || 0, pageIndex + 1),
+      completedQuizzes: cookieProgress?.completedQuizzes || [],
+      lastReadAt: new Date().toISOString(),
+    });
+
+    if (user && progress) {
+      try {
+        await supabase.from('page_reads').insert({
+          user_id: user.id,
+          book_id: bookId,
+          page_number: currentPage,
+        });
+      } catch (error) {
+        console.log('Page already recorded or error:', error);
+      }
+
+      await supabase
+        .from('reading_progress')
+        .update({
+          current_page: currentPage,
+          pages_read: Math.max(progress.pages_read, pageIndex + 1),
+          completed: isCompleted,
+          last_read_at: new Date().toISOString(),
+        })
+        .eq('id', progress.id);
+    }
+
+    await checkForQuiz();
   };
 
   const handleQuizSubmit = async () => {
-    if (selectedAnswer === null || !currentQuiz || !user) return;
+    if (selectedAnswer === null || !currentQuiz) return;
 
     const isCorrect = selectedAnswer === currentQuiz.correct_answer;
-    const points = isCorrect ? 3 : 0;
+    let pointsToShow = 0;
+    let alreadyAnswered = false;
 
-    await supabase.from('quiz_responses').insert({
-      user_id: user.id,
-      quiz_id: currentQuiz.id,
-      user_answer: selectedAnswer,
-      is_correct: isCorrect,
-      points_earned: points,
-    });
+    if (user) {
+      const { data: existingResponse } = await supabase
+        .from('quiz_responses')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('quiz_id', currentQuiz.id)
+        .maybeSingle();
 
-    setQuizResult({ correct: isCorrect, points });
-    await refreshProfile();
+      if (existingResponse) {
+        alreadyAnswered = true;
+        pointsToShow = 0;
+      } else {
+        const pointsEarned = isCorrect ? 3 : 0;
+        try {
+          await supabase.from('quiz_responses').insert({
+            user_id: user.id,
+            quiz_id: currentQuiz.id,
+            user_answer: selectedAnswer,
+            is_correct: isCorrect,
+            points_earned: pointsEarned,
+          });
+          pointsToShow = pointsEarned;
+          markQuizCompleted(bookId, currentQuiz.id);
+          await refreshProfile();
+        } catch (error) {
+          console.error('Error submitting quiz:', error);
+          pointsToShow = 0;
+          alreadyAnswered = true;
+        }
+      }
+    } else {
+      const alreadyCompletedInCookie = hasCompletedQuiz(bookId, currentQuiz.id);
+      if (alreadyCompletedInCookie) {
+        alreadyAnswered = true;
+        pointsToShow = 0;
+      } else {
+        pointsToShow = isCorrect ? 3 : 0;
+        markQuizCompleted(bookId, currentQuiz.id);
+      }
+    }
+
+    setQuizResult({ correct: isCorrect, points: pointsToShow });
   };
 
   const closeQuiz = () => {
@@ -191,10 +261,10 @@ export const Reader = ({ bookId, onClose }: ReaderProps) => {
             <span>إغلاق</span>
           </button>
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{book.title}</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{book.author}</p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white" dir="rtl">{book.title}</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400" dir="rtl">{book.author}</p>
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="text-sm text-gray-600 dark:text-gray-400" dir="rtl">
             {currentPage.page_number} / {book.total_pages}
           </div>
         </div>
@@ -258,27 +328,38 @@ export const Reader = ({ bookId, onClose }: ReaderProps) => {
                     quizResult.correct ? 'text-green-500' : 'text-red-500'
                   }`}
                 />
-                <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+                <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white" dir="rtl">
                   {quizResult.correct ? 'إجابة صحيحة!' : 'إجابة خاطئة'}
                 </h3>
-                {quizResult.correct && (
-                  <p className="text-lg text-amber-600 dark:text-amber-400 mb-6">
-                    لقد ربحت {quizResult.points} نقاط!
+                {quizResult.correct && quizResult.points > 0 && (
+                  <p className="text-lg text-amber-600 dark:text-amber-400 mb-6" dir="rtl">
+                    لقد حصلت على {quizResult.points} نقاط!
+                  </p>
+                )}
+                {quizResult.correct && quizResult.points === 0 && (
+                  <p className="text-lg text-gray-600 dark:text-gray-400 mb-6" dir="rtl">
+                    لقد أجبت على هذا السؤال من قبل
+                  </p>
+                )}
+                {!quizResult.correct && (
+                  <p className="text-lg text-gray-600 dark:text-gray-400 mb-6" dir="rtl">
+                    الإجابة الصحيحة: {currentQuiz.options[currentQuiz.correct_answer]}
                   </p>
                 )}
                 <button
                   onClick={closeQuiz}
                   className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-3 rounded-lg transition-colors"
+                  dir="rtl"
                 >
                   متابعة القراءة
                 </button>
               </div>
             ) : (
               <>
-                <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white text-right">
-                  سؤال التحقق
+                <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white" dir="rtl">
+                  سؤال الفهم
                 </h3>
-                <p className="text-lg mb-6 text-gray-800 dark:text-gray-200 text-right leading-relaxed">
+                <p className="text-lg mb-6 text-gray-800 dark:text-gray-200 leading-relaxed text-right" style={{ fontFamily: 'Cairo, Tajawal, sans-serif' }} dir="rtl">
                   {currentQuiz.question}
                 </p>
                 <div className="space-y-3 mb-8">
@@ -286,11 +367,13 @@ export const Reader = ({ bookId, onClose }: ReaderProps) => {
                     <button
                       key={index}
                       onClick={() => setSelectedAnswer(index)}
-                      className={`w-full p-4 text-right rounded-lg border-2 transition-colors ${
+                      className={`w-full p-4 rounded-lg border-2 transition-colors text-right ${
                         selectedAnswer === index
                           ? 'border-amber-600 bg-amber-50 dark:bg-amber-900/20'
                           : 'border-gray-300 dark:border-gray-600 hover:border-amber-400'
                       }`}
+                      style={{ fontFamily: 'Cairo, Tajawal, sans-serif' }}
+                      dir="rtl"
                     >
                       <span className="text-gray-900 dark:text-white">{option}</span>
                     </button>
@@ -300,6 +383,7 @@ export const Reader = ({ bookId, onClose }: ReaderProps) => {
                   <button
                     onClick={closeQuiz}
                     className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-3 rounded-lg transition-colors"
+                    dir="rtl"
                   >
                     إلغاء
                   </button>
@@ -307,6 +391,7 @@ export const Reader = ({ bookId, onClose }: ReaderProps) => {
                     onClick={handleQuizSubmit}
                     disabled={selectedAnswer === null}
                     className="flex-1 bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    dir="rtl"
                   >
                     إرسال الإجابة
                   </button>

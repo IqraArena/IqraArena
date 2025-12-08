@@ -1,19 +1,30 @@
-import { BookOpen, Award, Users, TrendingUp, Sparkles, Heart, Brain, Star } from 'lucide-react';
+import { BookOpen, Award, Users, TrendingUp, Sparkles, Heart, Brain, Star, Moon, Sun } from 'lucide-react';
 
 type HomeProps = {
   onGetStarted: () => void;
+  darkMode: boolean;
+  onToggleDarkMode: () => void;
 };
 
-export const Home = ({ onGetStarted }: HomeProps) => {
+export const Home = ({ onGetStarted, darkMode, onToggleDarkMode }: HomeProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-amber-950 dark:to-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={onToggleDarkMode}
+            className="p-2 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-lg transition-colors shadow-md"
+            aria-label="Toggle dark mode"
+          >
+            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+        </div>
         <div className="text-center mb-16">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full mb-6 shadow-lg">
             <BookOpen className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-            مكتبة القراءة
+            IqraArena
           </h1>
           <p className="text-2xl md:text-3xl text-amber-700 dark:text-amber-400 font-semibold mb-8">
             اقرأ، تعلم، واربح النقاط
@@ -22,54 +33,30 @@ export const Home = ({ onGetStarted }: HomeProps) => {
             onClick={onGetStarted}
             className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-lg font-bold px-12 py-4 rounded-full shadow-xl transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
           >
-            ابدأ رحلتك الآن
+            سجل دخولك للبدء
           </button>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-12 mb-12">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-6 md:p-12 mb-12">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
               رحلة إلى عالم المعرفة والإلهام
             </h2>
             <div className="max-w-4xl mx-auto text-lg text-gray-700 dark:text-gray-300 leading-relaxed space-y-6 text-right" dir="rtl">
               <p className="text-xl font-medium text-amber-700 dark:text-amber-400">
-                القراءة ليست مجرد كلمات على صفحات، بل هي نافذة نطل منها على عوالم لا حدود لها من المعرفة والحكمة والخيال.
+                القراءة ليست مجرد كلمات على صفحات، بل نافذة على عوالم لا حدود لها من المعرفة والخيال. فهي تفتح أبواب التاريخ، تنير دروب المستقبل، وتوسع آفاق التفكير.
               </p>
 
               <p>
-                في عصر تتسارع فيه وتيرة الحياة وتتنوع فيه مصادر المعلومات، يبقى الكتاب رفيق الإنسان الأوفى ومعلمه الأعظم.
-                فالقراءة تفتح أمامنا أبواب التاريخ، وتنير لنا دروب المستقبل، وتصقل عقولنا، وتهذب نفوسنا، وتوسع آفاق تفكيرنا.
+                مع القراءة، نعيش تجارب الآخرين، نسافر عبر الزمان والمكان، ونستلهم من قصص النجاح والحكمة. كل كتاب يضيف إلى شخصيتنا بُعداً جديداً ويغني عقولنا.
               </p>
 
               <p>
-                من خلال القراءة، نعيش حيوات متعددة ونكتسب خبرات الآخرين دون أن نخوض تجاربهم. نسافر عبر الزمان والمكان،
-                نحاور العظماء والحكماء، ونستلهم من قصص النجاح والصمود. كل كتاب نقرأه يضيف إلى شخصيتنا بُعداً جديداً،
-                ويثري عقولنا بفكرة نيرة، ويمنحنا القدرة على رؤية العالم من زوايا مختلفة.
-              </p>
-
-              <p className="text-xl font-medium text-amber-700 dark:text-amber-400">
-                لهذا أنشأنا هذا المشروع الفريد، لنجعل القراءة تجربة ممتعة ومحفزة ومجزية في آن واحد.
-              </p>
-
-              <p>
-                نقدم لك مكتبة غنية بأروع الكتب العربية الكلاسيكية، من روائع الأدب والفلسفة والرحلات.
-                كل كتاب اخترناه بعناية ليكون مصدر إلهام وعلم وإمتاع. ولأننا نؤمن بقيمة القراءة الحقيقية والفهم العميق،
-                ابتكرنا نظاماً يكافئك على قراءتك المتأنية واستيعابك الواعي للمحتوى.
-              </p>
-
-              <p>
-                بعد كل ثلاث صفحات، ستجيب على سؤال بسيط يختبر فهمك لما قرأت. وعندما تجيب بشكل صحيح،
-                تحصل على نقاط تعكس تقدمك ومثابرتك. تنافس مع القراء الآخرين، اصعد في لوحة المتصدرين،
-                واحتفل بإنجازاتك في رحلة القراءة.
+                IqraArena يقدم مكتبة مختارة من أروع الكتب العربية الكلاسيكية، ويجعل القراءة ممتعة ومجزية. نظامنا يكافئك على الفهم العميق: بعد كل عشرة صفحات، تجيب على سؤال بسيط لتحصل على نقاط وتتقدم في لوحة المتصدرين.
               </p>
 
               <p className="text-xl font-semibold text-gray-900 dark:text-white border-r-4 border-amber-500 pr-6">
-                معاً، لنحيي ثقافة القراءة في مجتمعنا. معاً، لنبني جيلاً واعياً متعلماً محباً للمعرفة.
-                معاً، لنصنع مستقبلاً أكثر إشراقاً من خلال صفحات الكتب العظيمة.
-              </p>
-
-              <p className="text-center text-2xl font-bold text-amber-700 dark:text-amber-400 pt-6">
-                ابدأ رحلتك اليوم، واجعل القراءة عادة يومية تثري حياتك وتنير طريقك.
+                معاً، لنحيي ثقافة القراءة ونبني جيلًا واعيًا ومتعلمًا محبًا للمعرفة. ابدأ رحلتك اليوم، واجعل القراءة عادة يومية تثري حياتك وتنير طريقك.
               </p>
             </div>
           </div>
@@ -151,7 +138,7 @@ export const Home = ({ onGetStarted }: HomeProps) => {
             onClick={onGetStarted}
             className="bg-white hover:bg-gray-100 text-amber-600 text-xl font-bold px-16 py-5 rounded-full shadow-xl transform transition-all duration-300 hover:scale-105"
           >
-            انضم الآن مجاناً
+            سجل دخولك الآن
           </button>
         </div>
 
@@ -160,6 +147,18 @@ export const Home = ({ onGetStarted }: HomeProps) => {
             مشروع تعليمي يهدف لتشجيع القراءة وإثراء المعرفة في العالم العربي
           </p>
         </div>
+
+        <footer className="mt-16 pt-8 border-t border-gray-300 dark:border-gray-700">
+          <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-6 border border-amber-200 dark:border-amber-800">
+            <div className="text-center text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-2" dir="rtl">
+              <p className="font-semibold text-amber-900 dark:text-amber-100">إشعار حقوق الملكية</p>
+              <p>جميع الكتب الواردة في هذا الموقع هي ملك لأصحابها الأصليين أو ناشريها، وقد تكون محمية بحقوق الطبع والنشر.</p>
+              <p>نُقدِّم هذه المواد لأغراض القراءة والدراسة أو الاطلاع التاريخي فقط.</p>
+              <p>يتحمل القارئ مسؤولية التحقق من دقة المعلومات وصحتها قبل أي استخدام تجاري أو أكاديمي أو نشر لاحق.</p>
+              <p>نحن لا نتحمل أي مسؤولية عن أي خطأ أو معلومات غير دقيقة قد تحتويها هذه الكتب.</p>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );

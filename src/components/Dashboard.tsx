@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase, Profile } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Award, BookOpen, TrendingUp, Trophy, ArrowLeft, Moon, Sun } from 'lucide-react';
+import { Award, BookOpen, TrendingUp, Trophy, ArrowLeft, Moon, Sun, Copy, CheckCircle, Wallet, Zap } from 'lucide-react';
+import { web3Service } from '../lib/web3';
 
 type DashboardProps = {
   onBack: () => void;
@@ -15,6 +16,12 @@ type UserStats = {
   totalPoints: number;
 };
 
+type BlockchainStats = {
+  pagesRead: number;
+  quizzesPassed: number;
+  totalPoints: number;
+};
+
 export const Dashboard = ({ onBack, darkMode, onToggleDarkMode }: DashboardProps) => {
   const { profile, signOut } = useAuth();
   const [stats, setStats] = useState<UserStats>({
@@ -22,8 +29,24 @@ export const Dashboard = ({ onBack, darkMode, onToggleDarkMode }: DashboardProps
     booksCompleted: 0,
     totalPoints: 0,
   });
+  const [blockchainStats, setBlockchainStats] = useState<BlockchainStats>({
+    pagesRead: 0,
+    quizzesPassed: 0,
+    totalPoints: 0,
+  });
   const [leaderboard, setLeaderboard] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -58,6 +81,21 @@ export const Dashboard = ({ onBack, darkMode, onToggleDarkMode }: DashboardProps
       setLeaderboard(leaderboardResult.data);
     }
 
+    if (profile.wallet_address) {
+      try {
+        const userData = await web3Service.getUser(profile.wallet_address);
+        if (userData) {
+          setBlockchainStats({
+            pagesRead: userData.pagesRead,
+            quizzesPassed: userData.quizzesPassed,
+            totalPoints: userData.totalPoints,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch blockchain data:', error);
+      }
+    }
+
     setLoading(false);
   };
 
@@ -70,7 +108,7 @@ export const Dashboard = ({ onBack, darkMode, onToggleDarkMode }: DashboardProps
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">جاري التحميل...</p>
+          <p className="text-gray-600 dark:text-gray-400">جارٍ التحميل...</p>
         </div>
       </div>
     );
@@ -87,14 +125,14 @@ export const Dashboard = ({ onBack, darkMode, onToggleDarkMode }: DashboardProps
             className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>العودة للمكتبة</span>
+            <span>عودة إلى المكتبة</span>
           </button>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">لوحة القيادة</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">IqraArena لوحة التحكم</h1>
           <div className="flex items-center gap-4">
             <button
               onClick={onToggleDarkMode}
               className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-              title={darkMode ? 'الوضع النهاري' : 'الوضع الليلي'}
+              title={darkMode ? 'الوضع الفاتح' : 'الوضع الداكن'}
             >
               {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
@@ -118,6 +156,58 @@ export const Dashboard = ({ onBack, darkMode, onToggleDarkMode }: DashboardProps
             </div>
           </div>
 
+          {profile?.wallet_address && (
+            <>
+              <div className="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                <div className="flex items-start gap-3">
+                  <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mb-1">عنوان محفظتك</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-mono text-emerald-700 dark:text-emerald-300 break-all bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded flex-1">
+                        {profile.wallet_address}
+                      </p>
+                      <button
+                        onClick={() => copyToClipboard(profile.wallet_address!)}
+                        className="p-2 hover:bg-emerald-200 dark:hover:bg-emerald-800 rounded transition-colors flex-shrink-0"
+                        title="نسخ العنوان"
+                      >
+                        {copied ? <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">إحصائيات البلوكشين</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                      {blockchainStats.pagesRead}
+                    </div>
+                    <div className="text-xs text-blue-700 dark:text-blue-300">الصفحات المقروءة</div>
+                  </div>
+                  <div className="text-center border-x border-blue-200 dark:border-blue-700">
+                    <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                      {blockchainStats.quizzesPassed}
+                    </div>
+                    <div className="text-xs text-blue-700 dark:text-blue-300">الاختبارات الناجحة</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                      {blockchainStats.totalPoints}
+                    </div>
+                    <div className="text-xs text-blue-700 dark:text-blue-300">النقاط</div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-6 text-center border border-blue-200 dark:border-blue-800">
               <BookOpen className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-3" />
@@ -132,7 +222,7 @@ export const Dashboard = ({ onBack, darkMode, onToggleDarkMode }: DashboardProps
               <div className="text-3xl font-bold text-green-900 dark:text-green-100 mb-1">
                 {stats.booksCompleted}
               </div>
-              <div className="text-sm text-green-700 dark:text-green-300">كتب مكتملة</div>
+              <div className="text-sm text-green-700 dark:text-green-300">الكتب المكتملة</div>
             </div>
 
             <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-xl p-6 text-center border border-amber-200 dark:border-amber-800">
@@ -190,7 +280,7 @@ export const Dashboard = ({ onBack, darkMode, onToggleDarkMode }: DashboardProps
                   <div className="font-semibold text-gray-900 dark:text-white">
                     {user.full_name}
                     {user.id === profile?.id && (
-                      <span className="text-amber-600 dark:text-amber-400 text-sm mr-2">(أنت)</span>
+                      <span className="text-amber-600 dark:text-amber-400 text-sm ml-2">(أنت)</span>
                     )}
                   </div>
                 </div>
