@@ -6,6 +6,7 @@ The platform combines intelligent reading tools, secure digital ownership, and a
 Users can read books, track progress, participate in discussions, earn points, and redeem rewards — all through a seamless and intuitive application.  
 Authors and publishers gain access to a modern distribution model with full control over their content and revenue, while readers enjoy a deeply interactive and motivating journey through literature.
 
+Live app: https://iqraarena.xyz/
 ---
 
 ## **Misson**
