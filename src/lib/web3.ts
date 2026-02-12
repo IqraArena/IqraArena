@@ -196,6 +196,10 @@ export class Web3Service {
     }
 
     try {
+      console.log(' Preparing Pages Read Transaction...');
+      console.log(' Target Chain ID:', baseMainnet.id);
+      console.log(' Target Contract:', CONTRACT_ADDRESS);
+
       const contract = getContract({
         client,
         chain: baseMainnet,
