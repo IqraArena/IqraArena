@@ -12,7 +12,6 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json"
   },
   "dependencies": {
-    "@celo/contractkit": "^10.0.2",
     "@supabase/supabase-js": "^2.57.4",
     "@wagmi/connectors": "^7.0.1",
     "@wagmi/core": "^3.0.0",
