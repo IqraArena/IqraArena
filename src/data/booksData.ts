@@ -228,5 +228,37 @@ export const booksData = [
         correct_answer: 1
       }
     ]
+  },
+  {
+    title: 'رحلة الأيام العشرة',
+    author: 'مغامر',
+    cover_image_url: 'https://images.pexels.com/photos/256395/pexels-photo-256395.jpeg?auto=compress&cs=tinysrgb&w=400',
+    description: 'كتاب تجريبي يحتوي على 10 صفحات لاختبار نظام القراءة والتتبع.',
+    pages: [
+      { page_number: 1, content: 'هذه هي الصفحة الأولى من رحلة الأيام العشرة.' },
+      { page_number: 2, content: 'في اليوم الثاني، استمرينا في المشي نحو الهدف.' },
+      { page_number: 3, content: 'اليوم الثالث كان مليئاً بالتحديات والعقبات.' },
+      { page_number: 4, content: 'في اليوم الرابع، وجدنا واحة جميلة للراحة.' },
+      { page_number: 5, content: 'اليوم الخامس، تعلمنا درساً جديداً في الصبر.' },
+      { page_number: 6, content: 'في اليوم السادس، التقينا بأصدقاء جدد في الطريق.' },
+      { page_number: 7, content: 'اليوم السابع كان يوماً هادئاً للتأمل.' },
+      { page_number: 8, content: 'في اليوم الثامن، اقتربنا كثيراً من وجهتنا.' },
+      { page_number: 9, content: 'اليوم التاسع، بدأنا نرى ملامح النهاية.' },
+      { page_number: 10, content: 'وأخيراً، في اليوم العاشر، وصلنا إلى هدفنا بنجاح.' }
+    ],
+    quizzes: [
+      {
+        page_number: 5,
+        question: 'ماذا تعلمنا في اليوم الخامس؟',
+        options: ['الصبر', 'السرعة', 'النوم', 'الأكل'],
+        correct_answer: 0
+      },
+      {
+        page_number: 10,
+        question: 'متى وصلنا إلى الهدف؟',
+        options: ['اليوم الأول', 'اليوم الخامس', 'اليوم العاشر', 'لم نصل'],
+        correct_answer: 2
+      }
+    ]
   }
 ];

@@ -3,16 +3,19 @@ import { booksData } from '../data/booksData';
 
 export const initializeBooks = async () => {
   try {
-    const { data: existingBooks } = await supabase.from('books').select('id').limit(1);
+    // Check which books already exist
+    const { data: existingBooks } = await supabase.from('books').select('title');
+    const existingTitles = new Set(existingBooks?.map(b => b.title) || []);
 
-    if (existingBooks && existingBooks.length > 0) {
-      console.log('Books already initialized');
-      return;
-    }
-
-    console.log('Initializing books...');
+    console.log('Checking for new books to initialize...');
 
     for (const bookData of booksData) {
+      if (existingTitles.has(bookData.title)) {
+        continue; // Skip existing books
+      }
+
+      console.log(`Initializing new book: ${bookData.title}...`);
+
       const { data: book, error: bookError } = await supabase
         .from('books')
         .insert({
@@ -61,7 +64,7 @@ export const initializeBooks = async () => {
       console.log(`Initialized book: ${bookData.title}`);
     }
 
-    console.log('All books initialized successfully!');
+    console.log('Book initialization check complete.');
   } catch (error) {
     console.error('Error initializing books:', error);
   }
