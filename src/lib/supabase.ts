@@ -24,6 +24,7 @@ export type Book = {
   author: string;
   category: string;
   cover_color: string;
+  cover_image_url?: string;
   description: string;
   total_pages: number;
   created_at: string;

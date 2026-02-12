@@ -32,24 +32,41 @@ export const Library = ({ onSelectBook, onViewDashboard, onViewLeaderboard, onSi
 
       if (error) {
         console.error('Error loading books:', error);
+        // Fallback to local data on error
+        console.log('Falling back to local data...');
+        const localBooks = booksData.map((b, i) => ({
+          id: `local-${i}`,
+          title: b.title,
+          author: b.author,
+          cover_image_url: b.cover_image_url,
+          description: b.description,
+          total_pages: b.pages.length,
+          created_at: new Date().toISOString(),
+          category: 'عام',
+          cover_color: 'bg-gradient-to-br from-amber-400 to-orange-600'
+        }));
+        setBooks(localBooks);
       } else {
         // Check if we need to initialize new books
         // If data is empty OR if we have more books in code than in DB
-        if (!data || data.length < booksData.length) {
-          console.log('Detected missing books, running initialization...');
-          await initializeBooks();
+        if (!data || data.length === 0) {
+          console.log('No books found in DB, using local data...');
+          // Use local data immediately for better UX while initialization happens in background
+          const localBooks = booksData.map((b, i) => ({
+            id: `local-${i}`,
+            title: b.title,
+            author: b.author,
+            cover_image_url: b.cover_image_url,
+            description: b.description,
+            total_pages: b.pages.length,
+            created_at: new Date().toISOString(),
+            category: 'عام',
+            cover_color: 'bg-gradient-to-br from-amber-400 to-orange-600'
+          }));
+          setBooks(localBooks);
 
-          // Fetch again after initialization
-          const result = await supabase
-            .from('books')
-            .select('*')
-            .order('created_at', { ascending: true });
-
-          if (result.error) {
-            console.error('Error loading books after initialization:', result.error);
-          } else {
-            setBooks(result.data || []);
-          }
+          // Try to initialize in background
+          initializeBooks().catch(err => console.error('Background init failed:', err));
         } else {
           setBooks(data);
         }

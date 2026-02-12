@@ -5,6 +5,7 @@ import { web3Service } from '../lib/web3';
 import { fundingService } from '../services/fundingService';
 import { ChevronLeft, ChevronRight, X, Award, Coins, Loader2, Moon, Sun, Link2 } from 'lucide-react';
 import Quiz from './Quiz';
+import { booksData } from '../data/booksData';
 
 type BlockchainReaderProps = {
   bookId: string;
@@ -40,6 +41,39 @@ export default function BlockchainReader({ bookId, onClose, darkMode, onToggleDa
   const loadBookData = async () => {
     try {
       console.log('Loading book data for ID:', bookId);
+
+      // Check for local book ID
+      if (bookId.startsWith('local-')) {
+        const index = parseInt(bookId.split('-')[1]);
+        const localBookData = booksData[index];
+
+        if (localBookData) {
+          console.log('Loading local book:', localBookData.title);
+          setBook({
+            id: bookId,
+            title: localBookData.title,
+            author: localBookData.author,
+            cover_image_url: localBookData.cover_image_url,
+            description: localBookData.description,
+            total_pages: localBookData.pages.length,
+            created_at: new Date().toISOString(),
+            category: 'عام',
+            cover_color: 'bg-gradient-to-br from-amber-400 to-orange-600'
+          });
+
+          setPages(localBookData.pages.map((p, i) => ({
+            id: `page-${i}`,
+            book_id: bookId,
+            page_number: p.page_number,
+            content: p.content,
+            created_at: new Date().toISOString()
+          })));
+
+          setLoading(false);
+          return;
+        }
+      }
+
       const [bookResult, pagesResult] = await Promise.all([
         supabase.from('books').select('*').eq('id', bookId).maybeSingle(),
         supabase.from('book_pages').select('*').eq('book_id', bookId).order('page_number'),
@@ -71,7 +105,9 @@ export default function BlockchainReader({ bookId, onClose, darkMode, onToggleDa
     } catch (error) {
       console.error('Failed to load book data:', error);
     } finally {
-      setLoading(false);
+      if (!bookId.startsWith('local-')) {
+        setLoading(false);
+      }
     }
   };
 
