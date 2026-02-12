@@ -3,6 +3,7 @@ import { Book } from '../lib/supabase';
 import { supabase } from '../lib/supabase';
 import { BookOpen, TrendingUp, LogOut, Trophy, Moon, Sun } from 'lucide-react';
 import { web3Service } from '../lib/web3';
+import { initializeBooks } from '../utils/initializeBooks';
 
 type LibraryProps = {
   onSelectBook: (bookId: string) => void;
@@ -22,17 +23,38 @@ export const Library = ({ onSelectBook, onViewDashboard, onViewLeaderboard, onSi
   }, []);
 
   const loadBooks = async () => {
-    const { data, error } = await supabase
-      .from('books')
-      .select('*')
-      .order('created_at', { ascending: true });
+    try {
+      let { data, error } = await supabase
+        .from('books')
+        .select('*')
+        .order('created_at', { ascending: true });
 
-    if (error) {
-      console.error('Error loading books:', error);
-    } else {
-      setBooks(data || []);
+      if (error) {
+        console.error('Error loading books:', error);
+      } else if (!data || data.length === 0) {
+        // If no books found, try to initialize them
+        console.log('No books found, initializing...');
+        await initializeBooks();
+
+        // Fetch again after initialization
+        const result = await supabase
+          .from('books')
+          .select('*')
+          .order('created_at', { ascending: true });
+
+        if (result.error) {
+          console.error('Error loading books after initialization:', result.error);
+        } else {
+          setBooks(result.data || []);
+        }
+      } else {
+        setBooks(data);
+      }
+    } catch (err) {
+      console.error('Unexpected error loading books:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleSignOut = async () => {

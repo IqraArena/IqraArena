@@ -48,6 +48,10 @@ export class Web3Service {
     return this.account !== null;
   }
 
+  async disconnect(): Promise<void> {
+    this.account = null;
+  }
+
   async checkBalance(): Promise<{ balance: string; hasEnoughForGas: boolean }> {
     if (!this.account) {
       return { balance: '0', hasEnoughForGas: false };
