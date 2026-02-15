@@ -1,0 +1,3 @@
+$env:SUPABASE_ACCESS_TOKEN = "sbp_c91968243435f50059928a497e43ac9e78e077a3"
+npx supabase secrets set ADMIN_PRIVATE_KEY=0x13j123imxns SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpcHN4YmljYWp2dnZwZG5kZmFpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDkxOTUzOCwiZXhwIjoyMDg2NDk1NTM4fQ.3STcPqRRRAKvUdOYdIWL_3hVKRZjByG7tOdCWqcPYws SUPABASE_URL=https://bipsxbicajvvvpdndfai.supabase.co --project-ref bipsxbicajvvvpdndfai
+npx supabase functions deploy fund-new-user --project-ref bipsxbicajvvvpdndfai --no-verify-jwt
