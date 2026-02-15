@@ -61,7 +61,7 @@ export class Web3Service {
       });
 
       const balanceInEth = parseFloat(result.displayValue);
-      const minimumRequired = 0.01;
+      const minimumRequired = 0.0005;
 
       return {
         balance: result.displayValue,
@@ -180,7 +180,6 @@ export class Web3Service {
   async recordPagesRead(): Promise<void> {
     console.log('=== RECORD PAGES READ ===');
     console.log('Account:', this.account);
-    console.log('Wallet:', this.wallet);
     console.log('CONTRACT_ADDRESS:', CONTRACT_ADDRESS);
     console.log('isConnected():', this.isConnected());
 

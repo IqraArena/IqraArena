@@ -5,6 +5,7 @@ import { Mail, AlertCircle, CheckCircle, Loader2, Copy, ArrowLeft, Moon, Sun } f
 import { client } from '../lib/thirdwebClient';
 import { web3Service } from '../lib/web3';
 import { supabase } from '../lib/supabase';
+import { useWalletFunding } from '../hooks/useWalletFunding';
 
 interface WalletConnectProps {
   onConnected: (address: string, username: string) => void;
@@ -26,6 +27,7 @@ export default function WalletConnect({ onConnected, onBack, darkMode, onToggleD
   const [error, setError] = useState<string>('');
   const [step, setStep] = useState<'email' | 'verify' | 'register'>('email');
   const [copied, setCopied] = useState(false);
+  const fundingStatus = useWalletFunding();
 
   useEffect(() => {
     if (activeAccount) {
@@ -314,10 +316,28 @@ export default function WalletConnect({ onConnected, onBack, darkMode, onToggleD
               <div className="flex items-start gap-2 text-blue-800">
                 <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-blue-700">
-                    سيتم شحن محفظتك من خلالنا أو يمكنك إرسال عملة ETH على عنوان محفظتك بشكل مباشر
+                  <p className="text-blue-700 font-medium">
+                    {fundingStatus.isFunding ? 'جارٍ شحن محفظتك تلقائياً...' :
+                      fundingStatus.isFunded ? 'تم شحن محفظتك بنجاح!' :
+                        'سيتم شحن محفظتك من خلالنا أو يمكنك إرسال عملة ETH على عنوان محفظتك بشكل مباشر'}
                   </p>
+                  {fundingStatus.transactionHash && (
+                    <p className="mt-1 text-xs opacity-75 break-all">
+                      Transaction: {fundingStatus.transactionHash}
+                    </p>
+                  )}
+                  {fundingStatus.error && (
+                    <p className="mt-2 text-red-600 font-bold">
+                      خطأ في الشحن: {fundingStatus.error}
+                    </p>
+                  )}
                 </div>
+                {(fundingStatus.isFunding || fundingStatus.isChecking) && (
+                  <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                )}
+                {fundingStatus.isFunded && (
+                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+                )}
               </div>
             </div>
 
@@ -338,7 +358,7 @@ export default function WalletConnect({ onConnected, onBack, darkMode, onToggleD
 
             <button
               type="submit"
-              disabled={isRegistering || !username.trim()}
+              disabled={isRegistering || !username.trim() || fundingStatus.isFunding || fundingStatus.isChecking}
               className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-amber-700 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
             >
               {isRegistering ? (
