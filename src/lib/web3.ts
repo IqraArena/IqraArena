@@ -80,7 +80,7 @@ export class Web3Service {
 
     const balanceCheck = await this.checkBalance();
     if (!balanceCheck.hasEnoughForGas) {
-      throw new Error(`لا يوجد رسوم غاز من عملة ETH كافية لديك بمحفظتك. لديك ${balanceCheck.balance} ETH وتحتاج على الأقل 0.01 ETH. برجاء شحن محفظتك`);
+      throw new Error(`لا يوجد رسوم غاز من عملة ETH كافية لديك بمحفظتك. لديك ${balanceCheck.balance} ETH وتحتاج على الأقل 0.0005 ETH. برجاء شحن محفظتك`);
     }
 
     try {
@@ -192,7 +192,7 @@ export class Web3Service {
 
     const balanceCheck = await this.checkBalance();
     if (!balanceCheck.hasEnoughForGas) {
-      throw new Error(`لا يوجد رسوم غاز من عملة ETH كافية لديك بمحفظتك. لديك ${balanceCheck.balance} ETH وتحتاج على الأقل 0.01 ETH. برجاء شحن محفظتك`);
+      throw new Error(`لا يوجد رسوم غاز من عملة ETH كافية لديك بمحفظتك. لديك ${balanceCheck.balance} ETH وتحتاج على الأقل 0.0005 ETH. برجاء شحن محفظتك`);
     }
 
     try {
@@ -227,7 +227,7 @@ export class Web3Service {
 
     const balanceCheck = await this.checkBalance();
     if (!balanceCheck.hasEnoughForGas) {
-      throw new Error(`لا يوجد رسوم غاز من عملة ETH كافية لديك بمحفظتك. لديك ${balanceCheck.balance} ETH وتحتاج على الأقل 0.01 ETH. برجاء شحن محفظتك`);
+      throw new Error(`لا يوجد رسوم غاز من عملة ETH كافية لديك بمحفظتك. لديك ${balanceCheck.balance} ETH وتحتاج على الأقل 0.0005 ETH. برجاء شحن محفظتك`);
     }
 
     try {

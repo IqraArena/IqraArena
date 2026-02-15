@@ -58,6 +58,8 @@ export function useWalletFunding() {
                 setStatus(prev => ({ ...prev, isFunding: true, isChecking: false }));
 
                 const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fund-wallet`;
+                console.log('Attempting to fund wallet via:', apiUrl);
+
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
@@ -65,6 +67,9 @@ export function useWalletFunding() {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ walletAddress: account.address }),
+                }).catch(err => {
+                    console.error('Fetch operation failed:', err);
+                    throw new Error(`Network error (Failed to fetch): ${err.message || 'Check your internet connection or if the Edge Function is running.'}`);
                 });
 
                 const data = await response.json();
