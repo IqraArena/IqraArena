@@ -17,7 +17,9 @@ serve(async (req: Request) => {
     }
 
     try {
+        console.log('Fund wallet function invoked');
         const { walletAddress } = await req.json();
+        console.log('Request body parsed, walletAddress:', walletAddress);
 
         if (!walletAddress) {
             return new Response(
