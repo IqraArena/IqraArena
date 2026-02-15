@@ -68,7 +68,7 @@ serve(async (req: Request) => {
 
         // Check funder balance
         const funderBalance = await provider.getBalance(funderWallet.address);
-        const fundingAmount = ethers.parseEther('0.001');
+        const fundingAmount = ethers.parseEther('0.0001');
 
         if (funderBalance < fundingAmount) {
             console.error('Insufficient funder balance:', ethers.formatEther(funderBalance));
@@ -79,7 +79,7 @@ serve(async (req: Request) => {
         }
 
         // Send ETH to the new wallet
-        console.log(`Funding wallet ${walletAddress} with 0.001 ETH...`);
+        console.log(`Funding wallet ${walletAddress} with 0.0001 ETH...`);
         const tx = await funderWallet.sendTransaction({
             to: walletAddress,
             value: fundingAmount,
@@ -95,7 +95,7 @@ serve(async (req: Request) => {
             .insert({
                 wallet_address: normalizedAddress,
                 transaction_hash: receipt.hash,
-                amount: '0.001',
+                amount: '0.0001',
             });
 
         if (insertError) {

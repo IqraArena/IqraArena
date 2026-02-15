@@ -87,9 +87,8 @@ export default function BlockchainReader({ bookId, onClose, darkMode, onToggleDa
         const newPagesRead = pagesReadInSession + 1;
         setPagesReadInSession(newPagesRead);
 
-        if (newPagesRead % 5 === 0) {
-          await saveProgressToBlockchain();
-        }
+        // Always save to blockchain for every page in background
+        saveProgressToBlockchain();
 
         if (newPagesRead % 10 === 0) {
           setShowQuiz(true);
@@ -107,17 +106,16 @@ export default function BlockchainReader({ bookId, onClose, darkMode, onToggleDa
   };
 
   const saveProgressToBlockchain = async () => {
-    setIsSavingProgress(true);
+    // We don't block the UI anymore for pages. It happens in the background.
     try {
-      await web3Service.recordPagesRead();
-      setRewardMessage('5 pages read! You earned 5 points!');
+      await web3Service.recordPagesRead(1);
+      setRewardMessage('صفحة واحدة قُرئت! حصلت على نقطة واحدة!');
       setShowReward(true);
       setTimeout(() => setShowReward(false), 3000);
     } catch (error: any) {
-      console.error('Failed to save progress:', error);
-      alert(`Failed to save progress: ${error.message}`);
-    } finally {
-      setIsSavingProgress(false);
+      console.error('Failed to save progress in background:', error);
+      // We don't alert for every page read error to avoid annoying the user
+      // but we could show a subtle toast
     }
   };
 
@@ -204,14 +202,7 @@ export default function BlockchainReader({ bookId, onClose, darkMode, onToggleDa
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-12 mb-8 min-h-[500px] relative">
-          {isSavingProgress && (
-            <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm flex items-center justify-center rounded-2xl z-10">
-              <div className="text-center">
-                <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mx-auto mb-4" />
-                <p className="text-gray-700 dark:text-gray-300 font-medium">جارٍ الحفظ على البلوكشين...</p>
-              </div>
-            </div>
-          )}
+          {/* Processing overlay removed for regular pages to allow background reading */}
 
           <div
             className="prose prose-lg max-w-none text-right leading-loose"
@@ -240,7 +231,7 @@ export default function BlockchainReader({ bookId, onClose, darkMode, onToggleDa
             </div>
             <div className="mt-2 flex gap-4 items-center justify-center text-xs text-gray-500 dark:text-gray-400">
               <div>
-                المكافأة القادمة: {5 - (pagesReadInSession % 5)} صفحات (5 نقاط)
+                كل صفحة = 1 نقطة (تسجيل مستمر في الخلفية)
               </div>
               <div>
                 الاختبار القادم: {10 - (pagesReadInSession % 10)} صفحات (10 نقاط)

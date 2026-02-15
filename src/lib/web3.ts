@@ -61,7 +61,7 @@ export class Web3Service {
       });
 
       const balanceInEth = parseFloat(result.displayValue);
-      const minimumRequired = 0.0005;
+      const minimumRequired = 0.00005;
 
       return {
         balance: result.displayValue,
@@ -80,7 +80,7 @@ export class Web3Service {
 
     const balanceCheck = await this.checkBalance();
     if (!balanceCheck.hasEnoughForGas) {
-      throw new Error(`لا يوجد رسوم غاز من عملة ETH كافية لديك بمحفظتك. لديك ${balanceCheck.balance} ETH وتحتاج على الأقل 0.0005 ETH. برجاء شحن محفظتك`);
+      throw new Error(`لا يوجد رسوم غاز من عملة ETH كافية لديك بمحفظتك. لديك ${balanceCheck.balance} ETH وتحتاج على الأقل 0.00005 ETH. برجاء شحن محفظتك`);
     }
 
     try {
@@ -177,7 +177,7 @@ export class Web3Service {
     }
   }
 
-  async recordPagesRead(): Promise<void> {
+  async recordPagesRead(pagesCount: number = 1): Promise<void> {
     console.log('=== RECORD PAGES READ ===');
     console.log('Account:', this.account);
     console.log('CONTRACT_ADDRESS:', CONTRACT_ADDRESS);
@@ -192,7 +192,7 @@ export class Web3Service {
 
     const balanceCheck = await this.checkBalance();
     if (!balanceCheck.hasEnoughForGas) {
-      throw new Error(`لا يوجد رسوم غاز من عملة ETH كافية لديك بمحفظتك. لديك ${balanceCheck.balance} ETH وتحتاج على الأقل 0.0005 ETH. برجاء شحن محفظتك`);
+      throw new Error(`لا يوجد رسوم غاز من عملة ETH كافية لديك بمحفظتك. لديك ${balanceCheck.balance} ETH وتحتاج على الأقل 0.00005 ETH. برجاء شحن محفظتك`);
     }
 
     try {
@@ -206,7 +206,7 @@ export class Web3Service {
       const transaction = prepareContractCall({
         contract,
         method: 'recordPagesRead',
-        params: [5n],
+        params: [BigInt(pagesCount)],
       });
 
       const result = await sendTransaction({
@@ -227,7 +227,7 @@ export class Web3Service {
 
     const balanceCheck = await this.checkBalance();
     if (!balanceCheck.hasEnoughForGas) {
-      throw new Error(`لا يوجد رسوم غاز من عملة ETH كافية لديك بمحفظتك. لديك ${balanceCheck.balance} ETH وتحتاج على الأقل 0.0005 ETH. برجاء شحن محفظتك`);
+      throw new Error(`لا يوجد رسوم غاز من عملة ETH كافية لديك بمحفظتك. لديك ${balanceCheck.balance} ETH وتحتاج على الأقل 0.00005 ETH. برجاء شحن محفظتك`);
     }
 
     try {
