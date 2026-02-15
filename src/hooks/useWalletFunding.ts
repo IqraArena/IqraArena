@@ -57,25 +57,12 @@ export function useWalletFunding() {
                 // Fund the wallet via edge function
                 setStatus(prev => ({ ...prev, isFunding: true, isChecking: false }));
 
-                const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fund-wallet`;
-                console.log('Attempting to fund wallet via:', apiUrl);
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ walletAddress: account.address }),
-                }).catch(err => {
-                    console.error('Fetch operation failed:', err);
-                    throw new Error(`Network error (Failed to fetch): ${err.message || 'Check your internet connection or if the Edge Function is running.'}`);
+                const { data, error } = await supabase.functions.invoke('fund-wallet', {
+                    body: { walletAddress: account.address },
                 });
 
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Funding failed');
+                if (error) {
+                    throw new Error(error.message || 'Funding failed');
                 }
 
                 setStatus({
