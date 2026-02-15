@@ -57,11 +57,16 @@ export function useWalletFunding() {
                 // Fund the wallet via edge function
                 setStatus(prev => ({ ...prev, isFunding: true, isChecking: false }));
 
+                console.log('--- DBG: INVOKING EDGE FUNCTION ---');
+                console.log('Project URL:', (supabase as any).supabaseUrl);
+
                 const { data, error } = await supabase.functions.invoke('fund-wallet', {
                     body: { walletAddress: account.address },
                 });
 
                 if (error) {
+                    console.error('--- DBG: EDGE FUNCTION ERROR ---', error);
+                    // If it's a 404, maybe the function name is wrong on the server?
                     throw new Error(error.message || 'Funding failed');
                 }
 
