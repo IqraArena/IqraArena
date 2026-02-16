@@ -13,7 +13,7 @@ const client = createThirdwebClient({
   clientId: THIRDWEB_CLIENT_ID,
 });
 
-const baseMainnet = defineChain({
+export const baseMainnet = defineChain({
   id: 8453,
   name: 'Base Mainnet',
   nativeCurrency: {
