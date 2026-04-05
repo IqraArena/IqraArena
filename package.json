@@ -9,20 +9,30 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+
+    "zk:compile": "circom circuits/reading_proof.circom --r1cs --wasm --sym --output build/ -l node_modules",
+    "zk:setup": "snarkjs groth16 setup build/reading_proof.r1cs pot12_final.ptau build/reading_proof_0000.zkey",
+    "zk:contribute": "snarkjs zkey contribute build/reading_proof_0000.zkey build/reading_proof_final.zkey --name='IqraArena contribution'",
+    "zk:export-vk": "snarkjs zkey export verificationkey build/reading_proof_final.zkey build/verification_key.json",
+    "zk:test": "mocha test/reading_proof.test.cjs --timeout 60000"
   },
   "dependencies": {
     "@celo/contractkit": "^10.0.2",
     "@supabase/supabase-js": "^2.57.4",
     "@wagmi/connectors": "^7.0.1",
     "@wagmi/core": "^3.0.0",
+    "circomlib": "^2.0.5",
+    "circomlibjs": "^0.1.7",
     "ethers": "^6.15.0",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "snarkjs": "^0.7.3",
     "thirdweb": "^5.114.0",
     "viem": "^2.40.2",
-    "wagmi": "^3.0.1"
+    "wagmi": "^3.0.1",
+    "zkverifyjs": "^0.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
@@ -30,10 +40,12 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.18",
+    "circom_tester": "^0.0.22",
     "eslint": "^9.9.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",
     "globals": "^15.9.0",
+    "mocha": "^10.2.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",

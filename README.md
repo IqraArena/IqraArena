@@ -87,3 +87,128 @@ Readers can convert their **“Read Points”** into:
 - Physical products from partners  
 
 Every redemption is verifiable and designed to build trust, transparency, and long-term motivation.
+
+---
+
+## How ZPK works
+
+```
+User reads page (30s+)
+        │
+        ▼
+Browser generates Groth16 proof (Circom + SnarkJS)
+  Private: user_secret, page_content_hash, reading_duration
+  Public:  user_commitment, page_id, session_timestamp
+        │
+        ▼
+zkverify.js submits proof to zkVerify chain
+        │
+        ▼
+zkVerify native Groth16 verifier validates proof (~1 second, ~90% cheaper than Ethereum)
+        │
+        ▼
+Attestation posted to Base
+        │
+        ▼
+IqraArena reward contract unlocks reading rewards
+```
+
+---
+
+## Circuit: `reading_proof.circom`
+
+### Private inputs (never leave the user's browser)
+
+| Signal | Description |
+|---|---|
+| `user_secret` | Random secret owned by the user. Used to derive their anonymous on-chain identity. |
+| `page_content_hash` | Poseidon hash of the page text. Binds the proof to a specific page. |
+| `reading_duration` | Seconds spent on the page. Proves actual reading happened. |
+
+### Public inputs (safe to expose on-chain)
+
+| Signal | Description |
+|---|---|
+| `user_commitment` | `Poseidon(user_secret)` — anonymous user identifier |
+| `page_id` | Unique identifier of the page that was read |
+| `session_timestamp` | Unix timestamp of the session — prevents replay attacks |
+| `min_read_time` | Minimum required reading time (e.g. 30 seconds) |
+
+### Output
+
+| Signal | Description |
+|---|---|
+| `session_hash` | `Poseidon(page_content_hash, page_id, session_timestamp)` — unique session fingerprint stored on-chain |
+
+### Constraints enforced
+
+1. `Poseidon(user_secret) == user_commitment` — proves the user owns the secret behind their commitment
+2. `reading_duration >= min_read_time` — proves sufficient reading time (bot prevention)
+3. `Poseidon(page_content_hash, page_id, session_timestamp) == session_hash` — proves the correct page was read
+
+---
+
+## ZK Technology Stack
+
+| Component | Technology | Why |
+|---|---|---|
+| Circuit language | Circom 2.1.6 | Mature, widely audited, supported by zkVerify |
+| Proof system | Groth16 | Smallest proof size (~200 bytes), lowest verification cost |
+| Hash function | Poseidon | ZK-friendly, 50x cheaper in-circuit than SHA256 |
+| Verification | zkVerify native Groth16 verifier | 90%+ cost reduction vs Ethereum |
+| Submission | zkverify.js | Official zkVerify JavaScript SDK |
+
+---
+
+## Setup & Usage
+
+### Prerequisites
+
+- Node.js >= 18
+- Circom 2.1.6 — [install guide](https://docs.circom.io/getting-started/installation/)
+
+### Install dependencies
+
+```bash
+npm install
+```
+
+### Compile the circuit
+
+```bash
+npm run compile
+```
+
+This generates `build/reading_proof.r1cs`, `build/reading_proof.wasm`, and `build/reading_proof.sym`.
+
+### Trusted setup (Powers of Tau)
+
+```bash
+# Download the phase 1 ceremony output (12th power — supports up to 4096 constraints)
+wget https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_12.ptau -O pot12_final.ptau
+
+# Phase 2 setup for this specific circuit
+npm run setup
+
+# Add your entropy contribution
+npm run contribute
+
+# Export the verification key
+npm run export-vk
+```
+
+### Run tests
+
+```bash
+npm test
+```
+
+Tests cover:
+- Valid reading sessions (standard, boundary cases, long sessions)
+- Identity constraint violations (wrong secret, tampered commitment)
+- Time constraint violations (below minimum, zero duration bot attack)
+
+
+## License
+
+MIT
